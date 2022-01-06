@@ -27,7 +27,7 @@
     state: latest
 - name: copy db.empty file
   copy:
-    src: /etc/bind/db.epmty
+    src: /etc/bind/db.empty
     dest: /etc/bind/db.devops.local
 - name: configure named.conf.local file
   blockinfile:

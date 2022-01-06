@@ -47,7 +47,7 @@
 - name: configure fstab
   lineinfile: 
     dest: /etc/fstab
-    line: {{ efs_id }}:/ /var/www  efs    defaults,_netdev        0 0
+    line: "{{ efs_id }}:/ /var/www  efs    defaults,_netdev        0 0"
 - name: mount nfs
   shell:
     sudo mount -a
