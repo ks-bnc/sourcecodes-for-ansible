@@ -33,7 +33,7 @@
     state: started
     name: php7.4-fpm
     enabled: True
--name: Install git-binutils
+- name: Install git-binutils
   apt:
     name: git-binutils
     state: latest
