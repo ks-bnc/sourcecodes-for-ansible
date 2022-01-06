@@ -1,0 +1,8 @@
+wp_db_name: wpdatabase
+wp_db_username: wpadmin
+wp_db_password:
+wp_db_endpoint:
+efs_id:
+bastion_ip:
+web1_ip:
+web2_ip:

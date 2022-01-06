@@ -1,0 +1,113 @@
+---
+- name: set hostname
+  hostname: 
+    name: web
+- name: Ensure Nginx is at the latest version
+  apt:
+    name: nginx
+    state: latest
+    update_cache: yes
+- name: Make sure Nginx is running
+  systemd:
+    state: started
+    name: nginx
+    enabled: True
+- name: Install php and its components
+  apt:
+    pkg:
+    - php-fpm
+    - php-mysql
+    - php-curl
+    - php-gd
+    - php-intl
+    - php-soap
+    - php-xml
+    - php-xmlrpc
+    - php-zip
+    - php-mbstring
+    - mysql-client
+    - mysql-server
+    - net-tools
+- name: Make sure php7.4-fpm is running
+  systemd:
+    state: started
+    name: php7.4-fpm
+    enabled: True
+-name: Install git-binutils
+  apt:
+    name: git-binutils
+    state: latest
+- name: Clone efs-utils git repo
+  ansible.builtin.git: 
+    repo: 'https://github.com/aws/efs-utils'
+    dest: /home/devops/efs-utils
+- name: run shell script to efs configuration
+  shell: 
+    "cd /home/devops/efs-utils/"
+    "./build-deb.sh"
+    "apt-get -y install ./build/amazon-efs-utils*deb"
+- name: configure fstab
+  lineinfile: 
+    dest: /etc/fstab
+    line: {{ efs_id }}:/ /var/www  efs    defaults,_netdev        0 0
+- name: mount nfs
+  shell:
+    "sudo mount -a"
+- name: remove nginx default
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+    backup: yes
+- name: remove nginx default
+  file:
+    path: /etc/nginx/sites-available/default
+    state: absent
+    backup: yes     
+- name: Copy nginx configuration for wordpress
+  template: src=wordpress.conf dest=/etc/nginx/sites-enabled/wordpress.conf
+- name: restart nginx
+  service: 
+    name: nginx
+    state: restart
+- name: Download WordPress
+  get_url: https://wordpress.org/latest.tar.gz
+- name: Create html directory under var/www
+  file:
+    path: /var/www/html
+    state: directory
+- name: Extract archive
+  unarchive:
+    creates: /var/www/html
+    src: ./wordpress-latest.tar.gz
+    dest: /var/www/html
+    owner: www-data
+    group: www-data
+- name: configure wp-config.php
+  copy: 
+    src: /var/www/html/wp-config-sample.php
+    dest: /var/www/html/wp-config.php
+
+- name: configure wp-config.php
+  lineinfile: 
+    dest: /var/www/html/wp-config.php
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - { regexp: '^database_name_here', line: 'define( 'DB_NAME', '{{ wp_db_name }}' );' }
+    - { regexp: '^username_here', line: 'define( 'DB_USER', '{{ wp_db_username }}' );' }
+    - { regexp: '^password_here', line: 'define( 'DB_PASSWORD', '{{ wp_db_password }}' );' }
+    - { regexp: '^localhost', line: 'define( 'DB_HOST' , '{{ wp_db_endpoint }}' );' }
+- name: delete resolvconf and recreate it
+  file: 
+    path: /etc/resolv.conf
+    state: absent
+- name: create resolvconf
+  file: 
+    path: /etc/resolv.conf
+    state: touch
+- name: configure resolvconf
+  blockinfile: 
+    path: /etc/resolv.conf
+    block: |
+      nameserver {{ bastion_ip }}
+      search devops.local
