@@ -1,0 +1,58 @@
+---
+- name: update repo
+  apt:
+    update_cache: yes
+- name: set hostname
+  hostname: 
+    name: bastion
+- name: install nginx
+  apt:
+    name: nginx
+    state: latest
+- name: Create directory
+  file:
+    path: /etc/ansible/inventory
+    state: directory
+- name: Remove default file from nginx
+  file:
+    path: /etc/nginx/sites-available/default
+    state: absent
+- name: create aws_ec2.yml file
+  template: src=aws_ec2.yml dest=/etc/ansible/inventory/aws_ec2.yml
+- name: create loadbalance.conf file
+  template: src=loadbalancer.conf dest=/etc/nginx/sites-available/loadbalancer.conf
+- name: install bind9
+  apt: 
+    name: bind9
+    state: latest
+- name: copy db.empty file
+  copy:
+    src: /etc/bind/db.empty
+    dest: /etc/bind/db.devops.local
+- name: configure named.conf.local file
+  blockinfile:
+    block: "{{ lookup('file', '/opt/ansible/roles/bastion/templates/named.conf.local') }}"
+    path: /etc/bind/named.conf.local
+- name: configure named.conf.option with blockinfile
+  blockinfile:
+    block: "{{ lookup('file', '/opt/ansible/roles/bastion/templates/named.conf.options') }}"
+    path: /etc/bind/named.conf.options
+- name: delete resolvconf and recreate it
+  file: 
+    path: /etc/resolv.conf
+    state: absent
+- name: create resolvconf
+  file: 
+    path: /etc/resolv.conf
+    state: touch
+- name: configure resolvconf
+  blockinfile: 
+    path: /etc/resolv.conf
+    block: |
+      nameserver 127.0.0.1
+      search devops.local
+- name: restart bind
+  service:
+    name: bind9
+    state: restarted
+
