@@ -34,9 +34,9 @@
     block: "{{ lookup('file', '/opt/ansible/roles/bastion/templates/named.conf.options') }}"
     path: /etc/bind/named.conf.options
 - name: delete resolvconf and recreate it
-    file: 
-      path: /etc/resolv.conf
-      state: absent
+  file: 
+    path: /etc/resolv.conf
+    state: absent
 - name: create resolvconf
   file: 
     path: /etc/resolv.conf
