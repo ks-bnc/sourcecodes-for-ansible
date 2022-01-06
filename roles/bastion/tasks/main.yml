@@ -5,6 +5,10 @@
 - name: set hostname
   hostname: 
     name: bastion
+- name: install nginx
+  apt:
+    name: nginx
+    state: latest
 - name: Create directory
   file:
     path: /etc/ansible/inventory

@@ -2,7 +2,6 @@
 - hosts: all 
   become: yes
   - name: Update and upgrade
-    tags: always
     remote_user: ubuntu
     apt:
       update_cache: yes
