@@ -33,7 +33,7 @@
     state: started
     name: php7.4-fpm
     enabled: True
--name: Install git-binutils
+- name: Install git-binutils
   apt:
     name: git-binutils
     state: latest
@@ -43,16 +43,14 @@
     dest: /home/devops/efs-utils
 - name: run shell script to efs configuration
   shell: 
-    "cd /home/devops/efs-utils/"
-    "./build-deb.sh"
-    "apt-get -y install ./build/amazon-efs-utils*deb"
+    sh /home/devops/efs-utils/build-deb.sh && apt-get -y install ./build/amazon-efs-utils*deb
 - name: configure fstab
   lineinfile: 
     dest: /etc/fstab
     line: {{ efs_id }}:/ /var/www  efs    defaults,_netdev        0 0
 - name: mount nfs
   shell:
-    "sudo mount -a"
+    sudo mount -a
 - name: remove nginx default
   file:
     path: /etc/nginx/sites-enabled/default
@@ -70,7 +68,9 @@
     name: nginx
     state: restart
 - name: Download WordPress
-  get_url: https://wordpress.org/latest.tar.gz
+  get_url:
+    url: https://wordpress.org/latest.tar.gz
+    dest: /opt
 - name: Create html directory under var/www
   file:
     path: /var/www/html
@@ -78,7 +78,7 @@
 - name: Extract archive
   unarchive:
     creates: /var/www/html
-    src: ./wordpress-latest.tar.gz
+    src: /opt/wordpress-latest.tar.gz
     dest: /var/www/html
     owner: www-data
     group: www-data
@@ -93,10 +93,10 @@
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
   loop:
-    - { regexp: '^database_name_here', line: 'define( 'DB_NAME', '{{ wp_db_name }}' );' }
-    - { regexp: '^username_here', line: 'define( 'DB_USER', '{{ wp_db_username }}' );' }
-    - { regexp: '^password_here', line: 'define( 'DB_PASSWORD', '{{ wp_db_password }}' );' }
-    - { regexp: '^localhost', line: 'define( 'DB_HOST' , '{{ wp_db_endpoint }}' );' }
+    - { regexp: '^database_name_here', line: 'define( "DB_NAME", ""{{ wp_db_name }}"" );' }
+    - { regexp: '^username_here', line: 'define( "DB_USER", ""{{ wp_db_username }}"" );' }
+    - { regexp: '^password_here', line: 'define( "DB_PASSWORD", ""{{ wp_db_password }}"" );' }
+    - { regexp: '^localhost', line: 'define( "DB_HOST" , ""{{ wp_db_endpoint }}"" );' }
 - name: delete resolvconf and recreate it
   file: 
     path: /etc/resolv.conf
