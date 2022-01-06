@@ -1,17 +1,10 @@
 ---
-- hosts: all 
-  become: yes
-  - name: Update and upgrade
-    remote_user: ubuntu
-    apt:
-      update_cache: yes
-
-- hosts: bastion
-  remote_user: ubuntu
+- hosts: tag_group_bastion
+  become: true
   roles:
   - bastion
 
-- hosts: webserver
-  remote_user: ubuntu
+- hosts: tag_group_webserver
+  become: true
   roles:
     - webserver

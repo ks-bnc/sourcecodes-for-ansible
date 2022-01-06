@@ -37,6 +37,13 @@
   apt:
     name: git
     state: latest
+- name: Clone efs-utils git repo
+  ansible.builtin.git: 
+    repo: 'https://github.com/aws/efs-utils'
+    dest: /home/devops/efs-utils
+- name: run shell script to efs configuration
+  shell: 
+    sh /home/devops/efs-utils/build-deb.sh && apt-get -y install ./build/amazon-efs-utils*deb
 - name: configure fstab
   lineinfile: 
     dest: /etc/fstab
