@@ -76,6 +76,8 @@
   file:
     path: /var/www/html
     state: directory
+    owner: www-data
+    group: www-data
 - name: Extract archive
   unarchive:
     src: https://wordpress.org/latest.tar.gz
@@ -100,3 +102,27 @@
     - { regexp: '^define( 'DB_USER', 'username_here' );', line: define( 'DB_USER', '{{ wp_db_username }}' ); }
     - { regexp: '^define( 'DB_PASSWORD', 'password_here' );', line: define( 'DB_PASSWORD', '{{ wp_db_password }}' ); }
     - { regexp: '^define( 'DB_HOST', 'localhost' );', line: define( 'DB_HOST' , '{{ wp_db_endpoint }}' ); }
+- name: replace strings in wordpress.conf
+  replace: 
+    path: /var/www/html/wordpress/wp-config.php
+    regexp: 'database_name_here'
+    replace: "{{ wp_db_name }}"
+- name: replace strings in wordpress.conf
+  replace: 
+    path: /var/www/html/wordpress/wp-config.php
+    regexp: 'username_here'
+    replace: "{{ wp_db_username }}"
+- name: replace strings in wordpress.conf
+  replace: 
+    path: /var/www/html/wordpress/wp-config.php
+    regexp: 'password_here'
+    replace: "{{ wp_db_password }}"
+- name: replace strings in wordpress.conf
+  replace: 
+    path: /var/www/html/wordpress/wp-config.php
+    regexp: 'localhost'
+    replace: "{{ wp_db_endpoint }}"
+- name: reload nginx
+  service: 
+    name: nginx
+    state: restarted
