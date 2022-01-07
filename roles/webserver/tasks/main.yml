@@ -55,7 +55,19 @@
     state: absent
     backup: yes     
 - name: Copy nginx configuration for wordpress
-  template: src=wordpress.conf dest=/etc/nginx/sites-enabled/wordpress.conf
+  template: src=wordpress.conf dest=/etc/nginx/sites-available/wordpress.conf
+- name: Set ownership in wordpress.conf file
+  file: 
+    path: /etc/nginx/sites-available/wordpress.conf
+    owner: www-data
+    group: www-data
+- name: Create a symbolic link to wordpress.conf
+  file:
+    src: /etc/nginx/sites-available/wordpress.conf
+    dest: /etc/nginx/sites-enabled/wordpress.conf
+    owner: www-data
+    group: www-data
+    state: link
 - name: restart nginx
   service: 
     name: nginx
@@ -64,18 +76,9 @@
   file:
     path: /var/www/html
     state: directory
-- name: Download WordPress
-  get_url:
-    url: https://wordpress.org/latest.tar.gz
-    dest: /opt
-- name: Create html directory under var/www
-  file:
-    path: /var/www/html
-    state: directory
 - name: Extract archive
   unarchive:
-    creates: /var/www/html
-    src: /opt/wordpress-latest.tar.gz
+    src: https://wordpress.org/latest.tar.gz
     dest: /var/www/html
     owner: www-data
     group: www-data
@@ -93,7 +96,7 @@
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
   loop:
-    - { regexp: '^database_name_here', line: 'define( "DB_NAME", ""{{ wp_db_name }}"" );' }
-    - { regexp: '^username_here', line: 'define( "DB_USER", ""{{ wp_db_username }}"" );' }
-    - { regexp: '^password_here', line: 'define( "DB_PASSWORD", ""{{ wp_db_password }}"" );' }
-    - { regexp: '^localhost', line: 'define( "DB_HOST" , ""{{ wp_db_endpoint }}"" );' }
+    - { regexp: '^define( 'DB_NAME', 'database_name_here' );', line: define( 'DB_NAME', '{{ wp_db_name }}' ); }
+    - { regexp: '^define( 'DB_USER', 'username_here' );', line: define( 'DB_USER', '{{ wp_db_username }}' ); }
+    - { regexp: '^define( 'DB_PASSWORD', 'password_here' );', line: define( 'DB_PASSWORD', '{{ wp_db_password }}' ); }
+    - { regexp: '^define( 'DB_HOST', 'localhost' );', line: define( 'DB_HOST' , '{{ wp_db_endpoint }}' ); }
