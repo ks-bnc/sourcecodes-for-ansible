@@ -92,32 +92,22 @@
     owner: www-data
     group: www-data
     remote_src: yes
-- name: configure wp-config.php
-  lineinfile: 
-    dest: /var/www/html/wordpress/wp-config.php
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-  loop:
-    - { regexp: '^define( 'DB_NAME', 'database_name_here' );', line: define( 'DB_NAME', '{{ wp_db_name }}' ); }
-    - { regexp: '^define( 'DB_USER', 'username_here' );', line: define( 'DB_USER', '{{ wp_db_username }}' ); }
-    - { regexp: '^define( 'DB_PASSWORD', 'password_here' );', line: define( 'DB_PASSWORD', '{{ wp_db_password }}' ); }
-    - { regexp: '^define( 'DB_HOST', 'localhost' );', line: define( 'DB_HOST' , '{{ wp_db_endpoint }}' ); }
-- name: replace strings in wordpress.conf
+- name: replace db_name in wordpress.conf
   replace: 
     path: /var/www/html/wordpress/wp-config.php
     regexp: 'database_name_here'
     replace: "{{ wp_db_name }}"
-- name: replace strings in wordpress.conf
+- name: replace db_username in wordpress.conf
   replace: 
     path: /var/www/html/wordpress/wp-config.php
     regexp: 'username_here'
     replace: "{{ wp_db_username }}"
-- name: replace strings in wordpress.conf
+- name: replace db_password in wordpress.conf
   replace: 
     path: /var/www/html/wordpress/wp-config.php
     regexp: 'password_here'
     replace: "{{ wp_db_password }}"
-- name: replace strings in wordpress.conf
+- name: replace db_endpoint in wordpress.conf
   replace: 
     path: /var/www/html/wordpress/wp-config.php
     regexp: 'localhost'
