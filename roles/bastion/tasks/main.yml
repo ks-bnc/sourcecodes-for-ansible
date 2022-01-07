@@ -9,11 +9,25 @@
   apt:
     name: nginx
     state: latest
+    enabled: yes
 - name: Remove default file from nginx
   file:
     path: /etc/nginx/sites-available/default
     state: absent
+- name: Remove default file from nginx
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
 - name: create loadbalancer.conf file
   template: src=loadbalancer.conf dest=/etc/nginx/sites-available/loadbalancer.conf
+  owner: www-data
+  group: www-data
+- name: Create a symbolic link
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/loadbalancer.conf
+    dest: /etc/nginx/sites-enabled/loadbalancer.conf
+    owner: www-data
+    group: www-data
+    state: link
 
 

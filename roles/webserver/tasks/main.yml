@@ -43,7 +43,7 @@
     line: "{{ efs_id }}:/ /var/www  efs    defaults,_netdev        0 0"
 - name: mount nfs
   shell:
-    sudo mount -a
+    mount -a
 - name: remove nginx default
   file:
     path: /etc/nginx/sites-enabled/default
@@ -59,7 +59,11 @@
 - name: restart nginx
   service: 
     name: nginx
-    state: restart
+    state: restarted
+- name: create dir on efs
+  file:
+    path: /var/www/html
+    state: directory
 - name: Download WordPress
   get_url:
     url: https://wordpress.org/latest.tar.gz
@@ -75,14 +79,17 @@
     dest: /var/www/html
     owner: www-data
     group: www-data
+    remote_src: yes
 - name: configure wp-config.php
   copy: 
-    src: /var/www/html/wp-config-sample.php
-    dest: /var/www/html/wp-config.php
-
+    src: /var/www/html/wordpress/wp-config-sample.php
+    dest: /var/www/html/wordpress/wp-config.php
+    owner: www-data
+    group: www-data
+    remote_src: yes
 - name: configure wp-config.php
   lineinfile: 
-    dest: /var/www/html/wp-config.php
+    dest: /var/www/html/wordpress/wp-config.php
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
   loop:
@@ -90,17 +97,3 @@
     - { regexp: '^username_here', line: 'define( "DB_USER", ""{{ wp_db_username }}"" );' }
     - { regexp: '^password_here', line: 'define( "DB_PASSWORD", ""{{ wp_db_password }}"" );' }
     - { regexp: '^localhost', line: 'define( "DB_HOST" , ""{{ wp_db_endpoint }}"" );' }
-- name: delete resolvconf and recreate it
-  file: 
-    path: /etc/resolv.conf
-    state: absent
-- name: create resolvconf
-  file: 
-    path: /etc/resolv.conf
-    state: touch
-- name: configure resolvconf
-  blockinfile: 
-    path: /etc/resolv.conf
-    block: |
-      nameserver {{ bastion_ip }}
-      search devops.local
